@@ -13,3 +13,54 @@ export const getAllQuestions = () => {
         });
     });
 }
+
+export const getQuestionById = (id) => {
+    return new Promise((resolve, reject) => {
+        const sql = 'SELECT * FROM questions WHERE id=?'
+        db.get(sql, [id], (err, row) => {
+            if (err){
+                reject(err);
+            } else if (!row) {
+                resolve(null);
+            } else {
+                resolve(new Question(row.id, row.text, row.author, row.date));
+            }
+        })
+    })
+}
+
+
+export const createQuestion = (question) => {
+    return new Promise((resolve, reject) => {
+        const sql = 'INSERT INTO questions (text, author, date) VALUES (?, ?, ?)';
+        db.run(sql, [question.text, question.author, question.date], function(err) {
+            if (err) {
+                reject(err)
+            } else {
+                resolve({ ...question, questionId: this.lastID })
+            }
+        })
+    })
+}
+
+export const deleteQuestion = (id) => {
+    return new Promise ((resolve, reject) => {
+        const sql = 'DELETE from questions WHERE id = ?'
+        db.run(sql, [id], function(err) {
+            if (err) {
+                reject(err)
+            } else if (this.changes === 0){
+                resolve({
+                    success: false,
+                    message: "Question was not deleted"
+                })
+            } else {
+                resolve({
+                    success: true,
+                    message: "Question was deleted successfully",
+                    changes: this.changes
+                })
+            }
+        })
+    })
+}

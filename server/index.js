@@ -13,6 +13,7 @@ app.use(morgan('dev'))
 
 // Routes
 app.use('/api/questions', questionRoutes);
+app.use('/api/questions/:id/answers', answerRoutes);
 
 // Error handling middleware (should be last)
 app.use(errorHandler);

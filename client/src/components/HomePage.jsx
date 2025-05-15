@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useEffect } from 'react';
-import { Button, Form, Table } from 'react-bootstrap';
+import { Alert, Button, Card, Container, Form, Spinner, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { ArrowRightSquare, Trash } from "react-bootstrap-icons"
-import { Question } from '../../server/models/Question';
+import { Question } from '../../../server/models/Question';
 
-function QuestionsList() {
+function HomePage() {
 
     const [questions, setQuestions] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -73,45 +73,52 @@ function QuestionsList() {
     }
 
     return (
-        <>
-            {isLoading && <p>Loading questions...</p>}
-            {error && <p className="text-danger">Error: {error}</p>}
-            {!isLoading && !error && questions.length === 0 && (
-                <p>No questions available. Add one below!</p>
-            )}
-            {!isLoading && !error && questions.length > 0 && (<Table responsive>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Question</th>
-                        <th>Author</th>
-                        <th>Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {questions.map(q => <QuestionRow key={q.questionId} question={q} onDeleteAction={onDeleteAction} />)}
-                </tbody>
-            </Table>)}
-            {!isLoading && !error && (<>
-                <h4>Add new question</h4>
-                <Form onSubmit={handleSubmit}>
-                    <Form.Group>
-                        <Form.Label> Text of the question </Form.Label>
-                        <Form.Control type='text' name='text' value={newText} onChange={(e) => setNewText(e.target.value)}></Form.Control>
-                    </Form.Group><Form.Group>
-                        <Form.Label> Asked by </Form.Label>
-                        <Form.Control type='text' name='author' value={newAuthor} onChange={(e) => setNewAuthor(e.target.value)}></Form.Control>
-                    </Form.Group><Form.Group>
-                        <Form.Label> Date </Form.Label>
-                        <Form.Control type='text' name='date' value={newDate} onChange={(e) => setNewDate(e.target.value)}></Form.Control>
-                    </Form.Group>
-                    <Button type='submit' variant='primary' className="mt-3">Save</Button>
-
-                </Form>
-            </>
-            )}
-        </>
+        <Container className="my-4">
+            <Card>
+                <Card.Header as="h3">Questions</Card.Header>
+                <Card.Body>
+                    {isLoading && <Spinner animation="border" />}
+                    {error && <Alert variant="danger">{error}</Alert>}
+                    {!isLoading && !error && questions.length === 0 && (
+                        <Alert variant="info">No questions available. Add one below!</Alert>
+                    )}
+                    {!isLoading && !error && questions.length > 0 && (
+                        <Table responsive bordered hover>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Question</th>
+                                    <th>Author</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {questions.map(q => <QuestionRow key={q.id} question={q} onDeleteAction={onDeleteAction} />)}
+                            </tbody>
+                        </Table>
+                    )}
+                </Card.Body>
+            </Card>
+            <Card className="mt-4">
+                <Card.Header as="h4">Add New Question</Card.Header>
+                <Card.Body>
+                    <Form onSubmit={handleSubmit}>
+                        <Form.Group>
+                            <Form.Label> Text of the question </Form.Label>
+                            <Form.Control type='text' name='text' value={newText} onChange={(e) => setNewText(e.target.value)}></Form.Control>
+                        </Form.Group><Form.Group>
+                            <Form.Label> Asked by </Form.Label>
+                            <Form.Control type='text' name='author' value={newAuthor} onChange={(e) => setNewAuthor(e.target.value)}></Form.Control>
+                        </Form.Group><Form.Group>
+                            <Form.Label> Date </Form.Label>
+                            <Form.Control type='text' name='date' value={newDate} onChange={(e) => setNewDate(e.target.value)}></Form.Control>
+                        </Form.Group>
+                        <Button type='submit' variant='primary' className="mt-3">Save</Button>
+                    </Form>
+                </Card.Body>
+            </Card>
+        </Container>
     );
 }
 
@@ -119,8 +126,8 @@ function QuestionRow(props) {
     const question = props.question;
 
     const navigate = useNavigate()
-    const navToQuestionPage = (questionId) => {
-        navigate(`/questions/${questionId}`, { state: { qid: questionId } })
+    const navToQuestionPage = (question) => {
+        navigate(`/questions/${question.id}`, { state: { question: question } })
     }
 
     const handleDelete = async (questionId) => {
@@ -144,19 +151,19 @@ function QuestionRow(props) {
 
 
     return <tr>
-        <td>{question.questionId}</td>
+        <td>{question.id}</td>
         <td>{question.text}</td>
         <td>{question.author}</td>
         <td>{question.date}</td>
         <td>
-            <ArrowRightSquare
-                onClick={() => navToQuestionPage(question.questionId)}
-                style={{ cursor: 'pointer', marginRight: '10px' }} />
             <Trash
-                onClick={() => handleDelete(question.questionId)}
-                style={{ cursor: 'pointer', color: 'red' }} />
+                onClick={() => handleDelete(question.id)}
+                style={{ cursor: 'pointer', color: 'red', marginRight: '10px' }} />
+            <ArrowRightSquare
+                onClick={() => navToQuestionPage(question)}
+                style={{ cursor: 'pointer' }} />
         </td>
     </tr>
 }
 
-export default QuestionsList;
+export default HomePage;

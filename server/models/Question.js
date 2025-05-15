@@ -1,6 +1,6 @@
 export class Question {
-    constructor(questionId, text, author, date){
-        this.questionId = questionId;
+    constructor(id, text, author, date){
+        this.id = id;
         this.text = text;
         this.author = author;
         this.date = date;

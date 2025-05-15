@@ -37,7 +37,7 @@ export const createQuestion = (question) => {
             if (err) {
                 reject(err)
             } else {
-                resolve({ ...question, questionId: this.lastID })
+                resolve({ ...question, id: this.lastID })
             }
         })
     })

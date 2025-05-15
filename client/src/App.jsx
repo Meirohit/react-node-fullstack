@@ -1,13 +1,10 @@
-import { useEffect, useState } from 'react'
 import './App.css'
-import Header from '../components/Header';
+import Header from './components/Header';
 import { Route, Routes } from 'react-router';
-import HomePage from '../components/QuestionsList';
-import QuestionPage from '../components/QuestionPage';
+import HomePage from './components/HomePage';
+import QuestionPage from './components/QuestionPage';
 
 function App() {
-
-  // const [msg, setMsg] = useState('');
 
   return (
     <>

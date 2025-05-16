@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useEffect } from 'react';
 import { Alert, Button, Card, Container, Form, Spinner, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
-import { ArrowRightSquare, Trash } from "react-bootstrap-icons"
+import { ArrowRightSquare, PencilSquare, Trash } from "react-bootstrap-icons"
 import { Question } from '../../../server/models/Question';
 
 function HomePage() {
@@ -10,9 +10,11 @@ function HomePage() {
     const [questions, setQuestions] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [newText, setNewText] = useState('')
-    const [newAuthor, setNewAuthor] = useState('')
-    const [newDate, setNewDate] = useState('')
+    const [editMode, setEditMode] = useState(false)
+    const [questionToEdit, setQuestionToEdit] = useState(null)
+    const [text, setText] = useState('')
+    const [author, setAuthor] = useState('')
+    const [date, setDate] = useState('')
 
     const fetchQuestions = async () => {
         setIsLoading(true)
@@ -32,21 +34,29 @@ function HomePage() {
         }
     };
 
-    useEffect(() => {
-        fetchQuestions();
-    }, []);
+    // Get All questions in the beginning
+    useEffect(() => { fetchQuestions(); }, []);
 
-    const onDeleteAction = () => {
-        fetchQuestions();
-    }
+    const onDeleteAction = () => { fetchQuestions(); }
 
+    // Form Operations
     const handleSubmit = (e) => {
         e.preventDefault();
-        const question = new Question(undefined, newText, newAuthor, newDate)
-        addQuestion(question)
-        setNewText('')
-        setNewAuthor('')
-        setNewDate('')
+
+        if (!editMode) {
+            const question = new Question(undefined, text, author, date)
+            addQuestion(question)
+        } else {
+            const question_put = new Question(questionToEdit.id, text, author, date)
+            editQuestion(question_put)
+        }
+
+
+        setText('');
+        setAuthor('');
+        setDate('');
+        setEditMode(false);
+        setQuestionToEdit(null);
     }
 
     const addQuestion = async (question) => {
@@ -61,16 +71,50 @@ function HomePage() {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            onNewQuestionCreation()
+            onFormSubmission()
 
         } catch (error) {
             console.error("Failed to create new question: ", error)
         }
     }
 
-    const onNewQuestionCreation = () => {
-        fetchQuestions();
+    const onFormSubmission = () => { fetchQuestions(); }
+
+    const editQuestion = async (question) => {
+        let question_put = {text: question.text, author: question.author, date: question.date }
+        try {
+            const response = await fetch(`http://localhost:3000/api/questions/${question.id}`, {
+                method: "PUT",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(question_put)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            onFormSubmission()
+        } catch (err) {
+            console.error("Failed to create new question: ", error)
+        }
     }
+    
+    const onEditModeChange = (question) => {
+        setQuestionToEdit(question);
+        setEditMode(true);
+    }
+
+    useEffect(() => {
+        if (editMode && questionToEdit) {
+            setText(questionToEdit.text);
+            setAuthor(questionToEdit.author);
+            setDate(questionToEdit.date);
+        } else {
+            setText('');
+            setAuthor('');
+            setDate('');
+        }
+    }, [editMode, questionToEdit])
+
 
     return (
         <Container className="my-4">
@@ -94,25 +138,25 @@ function HomePage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {questions.map(q => <QuestionRow key={q.id} question={q} onDeleteAction={onDeleteAction} />)}
+                                {questions.map(q => <QuestionRow key={q.id} question={q} onDeleteAction={onDeleteAction} onEditModeChange={onEditModeChange} />)}
                             </tbody>
                         </Table>
                     )}
                 </Card.Body>
             </Card>
             <Card className="mt-4">
-                <Card.Header as="h4">Add New Question</Card.Header>
+                <Card.Header as="h4">{editMode ? 'Edit question' : 'Add New Question'}</Card.Header>
                 <Card.Body>
                     <Form onSubmit={handleSubmit}>
                         <Form.Group>
                             <Form.Label> Text of the question </Form.Label>
-                            <Form.Control type='text' name='text' value={newText} onChange={(e) => setNewText(e.target.value)}></Form.Control>
+                            <Form.Control type='text' name='text' value={text} onChange={(e) => setText(e.target.value)}></Form.Control>
                         </Form.Group><Form.Group>
                             <Form.Label> Asked by </Form.Label>
-                            <Form.Control type='text' name='author' value={newAuthor} onChange={(e) => setNewAuthor(e.target.value)}></Form.Control>
+                            <Form.Control type='text' name='author' value={author} onChange={(e) => setAuthor(e.target.value)}></Form.Control>
                         </Form.Group><Form.Group>
                             <Form.Label> Date </Form.Label>
-                            <Form.Control type='text' name='date' value={newDate} onChange={(e) => setNewDate(e.target.value)}></Form.Control>
+                            <Form.Control type='text' name='date' value={date} onChange={(e) => setDate(e.target.value)}></Form.Control>
                         </Form.Group>
                         <Button type='submit' variant='primary' className="mt-3">Save</Button>
                     </Form>
@@ -156,6 +200,9 @@ function QuestionRow(props) {
         <td>{question.author}</td>
         <td>{question.date}</td>
         <td>
+            <PencilSquare
+                onClick={() => props.onEditModeChange(question)}
+                style={{ cursor: 'pointer', marginRight: '10px' }} />
             <Trash
                 onClick={() => handleDelete(question.id)}
                 style={{ cursor: 'pointer', color: 'red', marginRight: '10px' }} />

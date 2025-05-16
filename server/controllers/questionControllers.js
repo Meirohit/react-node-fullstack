@@ -1,5 +1,5 @@
 import { Question } from '../models/Question.js';
-import { createQuestion, deleteQuestion, getAllQuestions, getQuestionById } from '../repositories/questionRepo.js';
+import { createQuestion, deleteQuestion, editQuestion, getAllQuestions, getQuestionById } from '../repositories/questionRepo.js';
 
 export const getQuestions = async (req, res, next) => {
     try {
@@ -63,5 +63,29 @@ export const dropQuestion = async (req, res, next) => {
         }
     } catch (err) {
         next(err)
+    }
+}
+
+export const editQuestionById = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const { text, author, date } = req.body;
+        if (!text || !author || !date) {
+            return res.status(400).json({
+                error: "Bad Request",
+                message: "Missing required fields: text, author and date are required"
+            })
+        }
+        const question = await getQuestionById(id);
+        if (!question) {
+            return res.status(404).json({
+                message: `Question with id: ${id} not found`
+            })
+        }
+
+        const result = await editQuestion(id, text, author, date)
+        res.status(200).json(result)
+    } catch (error) {
+        next(error)
     }
 }

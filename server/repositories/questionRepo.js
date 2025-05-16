@@ -64,3 +64,16 @@ export const deleteQuestion = (id) => {
         })
     })
 }
+
+export const editQuestion = (id, text, author, date) => {
+    return new Promise ((resolve, reject) => {
+        const sql = 'UPDATE questions SET text = ?, author = ?, date = ? WHERE id = ?';
+        db.run(sql, [text, author, date, id], function (err) {
+            if (err) {
+                reject (err)
+            } else {
+                resolve({id: id, text: text, author: author, date: date})
+            }
+        })
+    })
+}

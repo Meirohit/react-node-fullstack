@@ -5,26 +5,38 @@ const db = new sqlite.Database('db.sqlite', (err) => {
   console.log('Connected to SQLite database');
 });
 
-db.exec('PRAGMA foreign_keys = ON;');
-
 db.exec(`
-    CREATE TABLE IF NOT EXISTS questions (
+    CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      text TEXT NOT NULL,
-      author TEXT,
-      date TEXT
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      full_name TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
 db.exec(`
-    CREATE TABLE IF NOT EXISTS answers (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      text TEXT NOT NULL,
-      author TEXT,
-      date TEXT,
-      questionId INTEGER NOT NULL,
-      FOREIGN KEY(questionId) REFERENCES questions(id) ON DELETE CASCADE
-    );
-  `);
+  CREATE TABLE IF NOT EXISTS goals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    estimated_time INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    goal_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    estimated_time INTEGER,
+    actual_time INTEGER,
+    status TEXT NOT NULL CHECK(status IN ('todo', 'in-progress', 'done')),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (goal_id) REFERENCES goals(id) ON DELETE CASCADE
+  );
+`);
+
 
 export default db;
